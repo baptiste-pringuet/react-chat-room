@@ -2,16 +2,25 @@ import React, { Component } from 'react';
 import './Form.css';
 import Message from '../Message/Message';
 import firebase from 'firebase';
+
+
+
 export default class Form extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            userName: 'Sebastian',
+            userName: 'machin',
             message: '',
             list: [],
+            imageUrl: '',
         };
         this.messageRef = firebase.database().ref().child('messages');
         this.listenMessages();
+
+        // Create the ref
+        this.fileInput = React.createRef()
+        this.imgCanvas = React.createRef()
+
     }
     componentWillReceiveProps(nextProps) {
         if(nextProps.user) {
@@ -26,39 +35,51 @@ export default class Form extends Component {
             var newItem = {
                 userName: this.state.userName,
                 message: this.state.message,
+                imageUrl: this.state.imageUrl,
             }
             this.messageRef.push(newItem);
             this.setState({ message: '' });
         }
     }
 
-    loadfile(event){
-        if(event.target.files[0]) {
-            const file = event.target.files[0];
+
+    handleImage() {
+
+        console.log("pas là", this.fileInput.current.files[0].name)
+        console.log("pas là", this.fileInput)
+
+        if (this.fileInput.current.files[0]) {
+            const file = this.fileInput.current.files[0];
             //const reader = new FileReader();
             // TODO : check si c'est une image
             let img = new Image;
             img.src = URL.createObjectURL(file);
+            console.log('img.src == ', img.src)
+            console.log('refcanvas == ', this.imgCanvas)
             img.onload = () => {
-                let canvas = this.$refs['imgCanvas']
-                let ctx = canvas.getContext('2d')
+                console.log('img onooaded')
+                let canvas = this.imgCanvas
+                let ctx = this.imgCanvas.current.getContext('2d');
                 ctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, 200, 100)
-                canvas.toBlob(blob => {
+                console.log('pouf', canvas)
+                canvas.current.toBlob(blob => {
+
                     // inject into storage then send msg
                     firebase.storage().ref('images/').child(file.name)
                         .put(blob)
                         .then(snapshot => {
                             snapshot.ref.getDownloadURL()
                                 .then(downloadURL => {
-                                    this.message = "![prout](" + downloadURL + ")"
-                                    this.tamerelapute()
-                                    // TODO : cleanup canvas && fileinput
+                                    this.state.imageUrl = downloadURL;
                                 });
                         })
+
                 }, 'image/webp', 0.8)
+
             };
         }
     }
+
     handleKeyPress(event) {
         if (event.key !== 'Enter') return;
         this.handleSend();
@@ -74,18 +95,21 @@ export default class Form extends Component {
     }
     render() {
         return (
+
             <div className="form">
                 <div className="form__message">
                     { this.state.list.map((item, index) =>
                         <Message key={index} message={item} />
                     )}
                 </div>
+                <canvas ref={this.imgCanvas}>
+                </canvas>
 
                 <div className="form__row">
                     <input
                         type="file"
-                        ref="fileInput"
-
+                        ref={this.fileInput}
+                        onChange={this.handleImage.bind(this)}
                     >
                     </input>
                     <input

@@ -8,6 +8,7 @@ export default class Message extends Component {
                     {this.props.message.userName}:
                 </span>
                 {this.props.message.message}
+                {this.props.message.imageUrl ? <img src={this.props.message.imageUrl} /> : ''}
             </div>
         )
     }

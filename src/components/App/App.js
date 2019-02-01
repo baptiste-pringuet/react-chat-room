@@ -49,7 +49,13 @@ class App extends Component {
             )}
           </div>
           <div className="app__list">
-            <Form user={this.state.user} />
+
+            { !this.state.user ? (
+                <p>disonect</p>
+            ) : (
+                <Form user={this.state.user} />
+            )}
+
           </div>
         </div>
     );
